@@ -1,0 +1,15 @@
+Testing the new product gallery redesign.
+Web - Chrome on Windows 11.
+
+- Opened the "Men's Shoes" category.
+- Grid loads fine. Images are high quality.
+- Clicked on the "Running Sneakers" product card.
+- The image carousel on the Product Detail Page (PDP) is broken. Clicking the right arrow skips the 2nd image and goes straight to the 3rd.
+- Zoom feature works beautifully on hover.
+- Scrolled down to reviews. 
+- The "Sort by: Highest Rated" dropdown does nothing. The list remains sorted by date.
+- Added item to wishlist. The heart icon turns red.
+- Navigated to the wishlist page. The item is there, but the product title text is overflowing out of its container box.
+- Tried to remove the item from the wishlist by clicking the 'X'. 
+- Nothing happens. The network tab shows a 403 Forbidden error for the DELETE request.
+- Looks like a permissions issue with the wishlist API endpoint.
