@@ -1,4 +1,5 @@
-streamlit
 groq
 pydantic
 python-dotenv
+fastapi
+uvicorn

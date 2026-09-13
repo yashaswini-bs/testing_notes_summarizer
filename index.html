@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QA Insight Workspace</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-sidebar: #172430;
+            --bg-canvas: #f9f7f2;
+            --bg-surface: #ffffff;
+            --accent-yellow: #fbbf24;
+            --accent-yellow-hover: #f59e0b;
+            --text-main: #1f2937;
+            --text-sidebar: #9ca3af;
+            --text-sidebar-active: #111827;
+            --text-muted: #6b7280;
+            --text-mono: #8b929e;
+            --border: #e5e7eb;
+            --dark-card: #1f2937;
+            --critical-text: #dc2626;
+            --critical-bg: #fee2e2;
+            --high-text: #ea580c;
+            --high-bg: #ffedd5;
+            --medium-text: #ca8a04;
+            --medium-bg: #fef9c3;
+            --tag-text: #059669;
+            --font-sans: 'Inter', -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-canvas);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 260px;
+            background-color: var(--bg-sidebar);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            color: #d1d5db;
+        }
+
+        .brand {
+            padding: 2rem 1.5rem 1.5rem;
+            display: flex; align-items: center; gap: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .brand-icon {
+            width: 32px; height: 32px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2);
+            display: flex; align-items: center; justify-content: center; color: var(--accent-yellow);
+        }
+
+        .brand-text { font-weight: 700; font-size: 1.1rem; color: white; line-height: 1.2;}
+        .brand-sub { font-size: 0.65rem; color: var(--text-sidebar); letter-spacing: 0.05em; font-family: var(--font-mono); text-transform: uppercase;}
+
+        .nav-section { padding: 1.5rem; flex: 1; }
+        .nav-header { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-sidebar); margin-bottom: 1rem; }
+
+        .nav-item {
+            padding: 0.6rem 1rem; margin-bottom: 0.5rem; border-radius: 6px; cursor: pointer;
+            font-weight: 500; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; color: #d1d5db; transition: all 0.2s;
+        }
+
+        .nav-item:hover { background: rgba(255,255,255,0.05); }
+        .nav-item.active { background-color: var(--accent-yellow); color: var(--text-sidebar-active); }
+
+        .sidebar-footer { padding: 1.5rem; border-top: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 12px; }
+        
+        .footer-avatar {
+            width: 32px; height: 32px; background: rgba(255,255,255,0.1); border-radius: 6px;
+            display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; color: var(--accent-yellow);
+        }
+
+        /* --- MAIN CANVAS --- */
+        .main-canvas { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+
+        .top-bar {
+            padding: 1rem 3rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;
+            font-size: 0.85rem; background: var(--bg-canvas); position: sticky; top: 0; z-index: 10;
+        }
+
+        .breadcrumbs { color: var(--text-muted); font-weight: 500; }
+        .breadcrumbs span { color: var(--text-main); font-weight: 600; }
+        
+        .api-status { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;}
+        .status-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; transition: background 0.3s; }
+
+        .content-area { padding: 3rem; max-width: 1200px; margin: 0 auto; width: 100%; }
+
+        /* --- VIEWS --- */
+        .view { display: none; }
+        .view.active { display: block; }
+
+        .page-eyebrow { font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-mono); margin-bottom: 1rem; }
+        .page-title { font-size: 2.5rem; font-weight: 600; letter-spacing: -0.03em; margin-bottom: 1rem; line-height: 1.1; max-width: 700px;}
+        .page-subtitle { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 2rem; max-width: 700px; line-height: 1.5; }
+        
+        .meta-specs { font-family: var(--font-mono); font-size: 0.75rem; margin-bottom: 3rem; display: flex; flex-direction: column; gap: 0.5rem; color: var(--text-main);}
+        .meta-specs span { color: var(--text-mono); margin-right: 1rem; text-transform: uppercase;}
+
+        /* --- WORKBENCH LAYOUT --- */
+        .workbench-layout { display: flex; gap: 2rem; align-items: flex-start; transition: all 0.3s ease; }
+        .workbench-layout.split .input-col { width: 45%; }
+        .workbench-layout.split .results-col { display: block; width: 55%; animation: slideIn 0.4s ease; }
+        .input-col { width: 100%; transition: width 0.3s ease; }
+        .results-col { display: none; }
+
+        .panel-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); margin-bottom: 2rem; }
+        .panel-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .panel-header-title { font-weight: 600; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;}
+        .panel-step { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-mono); }
+        .panel-body { padding: 1.5rem; }
+
+        /* --- INPUT & UPLOAD --- */
+        .textarea-header { display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-main); margin-bottom: 0.75rem; font-weight: 600;}
+        .textarea-header span { color: var(--text-mono); font-weight: 400;}
+
+        .upload-trigger {
+            font-family: var(--font-sans); font-size: 0.75rem; color: var(--text-main); background: #f3f4f6; 
+            padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; border: 1px solid var(--border); transition: background 0.2s;
+        }
+        .upload-trigger:hover { background: #e5e7eb; }
+
+        textarea {
+            width: 100%; height: 300px; border: 1px solid var(--border); border-radius: 6px; padding: 1rem;
+            font-family: var(--font-sans); font-size: 0.95rem; line-height: 1.6; resize: vertical; background: #fafafa;
+        }
+        textarea:focus { outline: none; border-color: var(--text-muted); background: white;}
+
+        .action-bar { padding: 1rem 1.5rem; background: #fafafa; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;}
+        .info-text { font-size: 0.85rem; color: #64748b; display: flex; align-items: center; gap: 6px;}
+
+        button.primary-btn { background: var(--bg-sidebar); color: white; border: none; padding: 0.6rem 1.25rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: background 0.2s; }
+        button.primary-btn:hover { background: #111827; }
+        button.primary-btn:disabled { background: var(--text-muted); cursor: not-allowed; }
+
+        /* --- RESULTS --- */
+        .dark-hero { background: var(--dark-card); color: white; padding: 2rem; border-radius: 12px 12px 0 0; position: relative; overflow: hidden; }
+        .hero-status { display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-yellow); text-transform: uppercase; margin-bottom: 1.5rem; letter-spacing: 0.05em;}
+        .hero-title { font-size: 1.4rem; font-weight: 600; margin-bottom: 2rem; max-width: 80%; line-height: 1.3;}
+        
+        .metrics-grid { display: flex; gap: 2rem; }
+        .metric { display: flex; flex-direction: column; }
+        .metric-val { font-size: 1.5rem; font-weight: 600; color: var(--accent-yellow); margin-bottom: 0.25rem;}
+        .metric-lbl { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-sidebar); text-transform: uppercase; letter-spacing: 0.05em;}
+
+        .results-list { padding: 2rem; background: var(--bg-surface); border: 1px solid var(--border); border-top: none; border-radius: 0 0 12px 12px; }
+        .list-header { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--text-main); margin-bottom: 1.5rem; display: flex; justify-content: space-between;}
+        .list-header span { color: var(--text-mono); font-weight: 400;}
+
+        .defect-card { border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; transition: all 0.3s ease; }
+        .defect-top { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem;}
+        .badge { font-family: var(--font-mono); font-size: 0.65rem; font-weight: 600; padding: 0.25rem 0.5rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em;}
+        .badge.critical { background: var(--critical-bg); color: var(--critical-text); }
+        .badge.high { background: var(--high-bg); color: var(--high-text); }
+        .badge.medium { background: var(--medium-bg); color: var(--medium-text); }
+        .defect-title { font-weight: 600; font-size: 1rem; line-height: 1.4;}
+        .defect-split { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #f3f4f6;}
+        .split-lbl { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-mono); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;}
+        .split-val { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;}
+        .defect-footer { font-family: var(--font-mono); font-size: 0.7rem; color: var(--tag-text); }
+
+        /* Compact Mode Overrides */
+        .compact-mode .defect-card { padding: 1rem; margin-bottom: 0.75rem; }
+        .compact-mode .defect-split { gap: 1rem; margin-bottom: 0.5rem; padding-bottom: 0.5rem; }
+
+        /* --- HISTORY & SETTINGS --- */
+        .history-list { display: flex; flex-direction: column; gap: 1rem; }
+        .history-item { background: var(--bg-surface); padding: 1.5rem; border: 1px solid var(--border); border-radius: 8px;}
+        .history-date { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-mono); margin-bottom: 0.75rem; }
+        .history-title { font-weight: 600; font-size: 1.1rem; margin-bottom: 1rem; }
+        
+        .settings-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
+        .setting-block { border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; margin-bottom: 1.5rem;}
+        .setting-block h4 { margin-bottom: 0.25rem; font-weight: 600;}
+        .setting-block p { font-size: 0.85rem; color: var(--text-muted); }
+        
+        /* Custom Toggle Switch */
+        .toggle-switch { width: 44px; height: 24px; background: #e5e7eb; border-radius: 12px; position: relative; cursor: pointer; transition: background 0.3s; }
+        .toggle-switch.active { background: #10b981; }
+        .toggle-knob { width: 20px; height: 20px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); transition: transform 0.3s; }
+        .toggle-switch.active .toggle-knob { transform: translateX(20px); }
+
+        .api-card { background: var(--bg-surface); padding: 1.5rem; border: 1px solid var(--border); border-radius: 12px; }
+        .api-row { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.75rem; margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid #f3f4f6;}
+        .api-row span:first-child { color: var(--text-mono); }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">✕</div>
+            <div>
+                <div class="brand-text">QA Insight</div>
+                <div class="brand-sub">Workbench / 01</div>
+            </div>
+        </div>
+        
+        <div class="nav-section">
+            <div class="nav-header">Command Center</div>
+            <div class="nav-item active" onclick="switchView('workbench', this)"><span style="font-size: 1.1rem;">⚏</span> Workbench</div>
+            <div class="nav-item" onclick="switchView('history', this)"><span style="font-size: 1.1rem;">↺</span> Analysis history</div>
+            <div class="nav-item" onclick="switchView('settings', this)"><span style="font-size: 1.1rem;">⚙</span> Workspace settings</div>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="footer-avatar">Y</div>
+            <div>
+                <div style="font-weight: 600; font-size: 0.85rem; color: white;">Yashaswini's Workspace</div>
+                <div style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-sidebar);">Local environment</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CANVAS -->
+    <main class="main-canvas">
+        <div class="top-bar">
+            <div class="breadcrumbs">Workspace <span style="margin: 0 8px; color: var(--text-muted);">›</span> <span id="headerTitle">Analysis workbench</span></div>
+            <div class="api-status"><div class="status-dot" id="globalStatusDot"></div> <span id="globalStatusText">API CONNECTED</span></div>
+        </div>
+
+        <div class="content-area">
+            
+            <!-- VIEW: WORKBENCH -->
+            <div id="view-workbench" class="view active">
+                <div class="page-eyebrow">Senior QA Signal Extraction</div>
+                <h1 class="page-title">Turn observations into a defensible review.</h1>
+                <p class="page-subtitle">Paste rough testing notes or upload a session file. Get ranked defect candidates, evidence, and the questions that keep a bug report honest.</p>
+                
+                <div class="meta-specs">
+                    <div><span>Input</span> notes / freeform / file</div>
+                    <div><span>Output</span> ranked / traceable</div>
+                </div>
+
+                <div id="workbenchLayout" class="workbench-layout">
+                    <!-- Left: Input Card -->
+                    <div class="input-col">
+                        <div class="panel-card">
+                            <div class="panel-header">
+                                <div class="panel-header-title"><span class="panel-step">01 / CAPTURE</span> <span style="margin-left: 10px;">Testing notes</span></div>
+                                <span style="color: var(--text-mono);">💬</span>
+                            </div>
+                            <div class="panel-body" style="padding-bottom: 0;">
+                                <div class="textarea-header">
+                                    <div>Observed behavior <span id="charCount" style="margin-left: 8px;">0 / 15,000</span></div>
+                                    <label class="upload-trigger">
+                                        📄 Upload File
+                                        <input type="file" accept=".txt" style="display: none;" onchange="handleFileUpload(event)">
+                                    </label>
+                                </div>
+                                <textarea id="notesInput" onkeyup="updateCharCount()" placeholder="Session Context: Functional testing for v2.0&#10;Browser: Chrome 114&#10;&#10;Observations:&#10;- Navigated to user dashboard&#10;- Encountered a layout shift on mobile view..."></textarea>
+                            </div>
+                            <div class="action-bar">
+                                <div class="info-text">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+                                    Include what happened, where, and what you expected.
+                                </div>
+                                <button id="analyzeBtn" class="primary-btn" onclick="analyzeNotes()">Generate review</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Results Card -->
+                    <div class="results-col" id="resultsContainer">
+                        <div class="panel-card" style="border: none;">
+                            <div class="dark-hero">
+                                <div class="hero-status">✓ Review Complete <span style="float: right; color: rgba(255,255,255,0.4); text-transform: none;">Actionable defect notes</span></div>
+                                <div class="hero-title" id="resTitle">0 defect candidates extracted from the notes.</div>
+                                <div class="metrics-grid">
+                                    <div class="metric"><span class="metric-val" id="mCands">0</span><span class="metric-lbl">Candidates</span></div>
+                                    <div class="metric"><span class="metric-val" id="mQs">0</span><span class="metric-lbl">Priority Signals</span></div>
+                                    <div class="metric"><span class="metric-val" id="mFocus">0</span><span class="metric-lbl">Focus Areas</span></div>
+                                </div>
+                            </div>
+                            <div class="results-list">
+                                <div class="list-header">Defect Candidates <span id="resCountRight">0 ranked by risk</span></div>
+                                <div id="defectsList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: HISTORY -->
+            <div id="view-history" class="view">
+                <div class="page-eyebrow">Local Record / Retained on this device</div>
+                <h1 class="page-title">Analysis history</h1>
+                <p class="page-subtitle" style="margin-bottom: 3rem;">Revisit prior reviews without sending them anywhere else.</p>
+                
+                <div class="list-header" style="border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+                    <span id="historyCount">0 Review Retained</span>
+                    <button onclick="clearHistory()" style="background:none; border:none; color:var(--text-main); font-weight:500; cursor:pointer;">🗑 Clear local history</button>
+                </div>
+                
+                <div id="historyContainer" class="history-list" style="margin-top: 1.5rem;"></div>
+            </div>
+
+            <!-- VIEW: SETTINGS -->
+            <div id="view-settings" class="view">
+                <div class="page-eyebrow">Workspace / Preferences</div>
+                <h1 class="page-title">Settings</h1>
+                <p class="page-subtitle" style="margin-bottom: 3rem;">Small controls for a focused review session. Preferences stay in this browser.</p>
+
+                <div class="settings-grid">
+                    <div class="panel-card" style="padding: 2rem;">
+                        <div class="setting-block">
+                            <h4>Review behavior</h4>
+                            <p style="margin-bottom: 1.5rem;">Choose how much context the workbench keeps visible.</p>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div><strong style="font-size: 0.95rem; color:var(--text-main);">Compact review cards</strong><br><span style="font-size: 0.85rem; color: var(--text-muted);">Reduce vertical space in defect candidates.</span></div>
+                                <div class="toggle-switch" id="compactToggle" onclick="toggleCompactMode()">
+                                    <div class="toggle-knob"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="setting-block" style="border: none; padding: 0; margin: 0;">
+                            <h4>Data boundary</h4>
+                            <p style="margin-bottom: 1rem;">Analysis history is the only local record created by this interface. Clearing it cannot affect the API.</p>
+                            <button class="primary-btn" style="background: white; border: 1px solid var(--border); color: var(--text-main);" onclick="clearHistory()">🗑 Clear local history</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="api-card">
+                            <div class="page-eyebrow">02 / Diagnostics</div>
+                            <h3 style="margin-bottom: 1.5rem;">API connection</h3>
+                            
+                            <div class="api-status" style="margin-bottom: 2rem; color: var(--text-main);"><div class="status-dot" id="settingStatusDot"></div> <span id="settingStatusText">CONNECTION HEALTHY</span></div>
+                            
+                            <div class="api-row"><span>Endpoint</span> <span>/api/analyze</span></div>
+                            <div class="api-row"><span>Health check</span> <span>/api/health</span></div>
+                            <div class="api-row" style="border: none;"><span>Storage</span> <span>browser only</span></div>
+                            
+                            <button class="primary-btn" style="width: 100%; margin-top: 1rem; background: white; border: 1px solid var(--border); color: var(--text-main);" onclick="refreshApiStatus()">↺ Refresh status</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // State & Local Storage
+        let appHistory = JSON.parse(localStorage.getItem('qa_insight_history') || '[]');
+        let isCompact = false;
+
+        function updateCharCount() {
+            const val = document.getElementById('notesInput').value.length;
+            document.getElementById('charCount').innerText = `${val} / 15,000`;
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('notesInput').value = e.target.result;
+                updateCharCount();
+            };
+            reader.readAsText(file);
+        }
+
+        function switchView(viewId, el) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            if(el) el.classList.add('active');
+
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById('view-' + viewId).classList.add('active');
+
+            const titles = { 'workbench': 'Analysis workbench', 'history': 'History', 'settings': 'Settings' };
+            document.getElementById('headerTitle').innerText = titles[viewId];
+            if(viewId === 'history') renderHistory();
+        }
+
+        // Settings Toggles
+        function toggleCompactMode() {
+            isCompact = !isCompact;
+            const toggle = document.getElementById('compactToggle');
+            const list = document.getElementById('defectsList');
+            
+            if(isCompact) {
+                toggle.classList.add('active');
+                list.classList.add('compact-mode');
+            } else {
+                toggle.classList.remove('active');
+                list.classList.remove('compact-mode');
+            }
+        }
+
+        async function refreshApiStatus() {
+            const textEl = document.getElementById('settingStatusText');
+            const dotEl = document.getElementById('settingStatusDot');
+            const globalText = document.getElementById('globalStatusText');
+            const globalDot = document.getElementById('globalStatusDot');
+
+            textEl.innerText = "CHECKING...";
+            dotEl.style.background = "#f59e0b"; // yellow
+
+            try {
+                const res = await fetch('http://127.0.0.1:8000/api/health');
+                if(res.ok) {
+                    textEl.innerText = "CONNECTION HEALTHY";
+                    dotEl.style.background = "#10b981"; // green
+                    globalText.innerText = "API CONNECTED";
+                    globalDot.style.background = "#10b981";
+                } else throw new Error();
+            } catch(e) {
+                textEl.innerText = "CONNECTION FAILED";
+                dotEl.style.background = "#ef4444"; // red
+                globalText.innerText = "OFFLINE";
+                globalDot.style.background = "#ef4444";
+            }
+        }
+
+        // History Management
+        function saveToHistory(summaryData) {
+            appHistory.unshift({
+                date: new Date().toLocaleString('en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                data: summaryData
+            });
+            localStorage.setItem('qa_insight_history', JSON.stringify(appHistory));
+        }
+
+        function clearHistory() {
+            if(confirm("Delete all local analysis history?")) {
+                appHistory = [];
+                localStorage.removeItem('qa_insight_history');
+                renderHistory();
+            }
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('historyContainer');
+            document.getElementById('historyCount').innerText = `${appHistory.length} Review${appHistory.length !== 1 ? 's' : ''} Retained`;
+            container.innerHTML = '';
+            
+            if(appHistory.length === 0) {
+                container.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem;">No history found on this device.</div>';
+                return;
+            }
+
+            appHistory.forEach(item => {
+                const bugCount = item.data.bugs ? item.data.bugs.length : 0;
+                container.innerHTML += `
+                    <div class="history-item">
+                        <div class="history-date">🕒 ${item.date}</div>
+                        <div class="history-title">${bugCount} defect candidates extracted.</div>
+                        <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted);">
+                            <span style="background: #f3f4f6; padding: 2px 6px; border-radius: 4px; margin-right: 6px;">${bugCount} candidates</span>
+                            <span style="background: #f3f4f6; padding: 2px 6px; border-radius: 4px;">${item.data.open_questions ? item.data.open_questions.length : 0} questions</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // API Call
+        async function analyzeNotes() {
+            const text = document.getElementById('notesInput').value;
+            const btn = document.getElementById('analyzeBtn');
+            const layout = document.getElementById('workbenchLayout');
+            
+            if (!text.trim()) return alert("Please enter testing notes first.");
+
+            btn.disabled = true;
+            btn.innerText = "Analyzing...";
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ notes: text })
+                });
+
+                if (!response.ok) throw new Error("API Error");
+                const data = await response.json();
+
+                if (!data.is_testing_notes) {
+                    alert("Validation Failed: " + (data.rejection_reason || "Non-testing text detected."));
+                    btn.disabled = false;
+                    btn.innerText = "Generate review";
+                    return;
+                }
+
+                document.getElementById('resTitle').innerText = `${data.bugs.length} defect candidates extracted from the notes.`;
+                document.getElementById('resCountRight').innerText = `${data.bugs.length} ranked by risk`;
+                document.getElementById('mCands').innerText = data.bugs.length;
+                document.getElementById('mQs').innerText = data.open_questions.length;
+                document.getElementById('mFocus').innerText = data.suggested_next_focus.length;
+
+                const list = document.getElementById('defectsList');
+                list.innerHTML = '';
+                if(isCompact) list.classList.add('compact-mode');
+
+                data.bugs.forEach(bug => {
+                    const sev = bug.severity.toLowerCase();
+                    list.innerHTML += `
+                        <div class="defect-card">
+                            <div class="defect-top">
+                                <span class="badge ${sev}">${bug.severity}</span>
+                                <div class="defect-title">${bug.title}</div>
+                            </div>
+                            <div class="defect-split">
+                                <div><div class="split-lbl">Evidence</div><div class="split-val">${bug.steps_to_reproduce.join(' → ')}</div></div>
+                                <div><div class="split-lbl">Likely Root Cause</div><div class="split-val">${bug.possible_root_cause}</div></div>
+                            </div>
+                            <div class="defect-footer">heuristic / ${bug.heuristic_tag}</div>
+                        </div>
+                    `;
+                });
+
+                saveToHistory(data);
+                layout.classList.add('split');
+
+            } catch (error) {
+                alert("Connection Error. Ensure FastAPI backend is running at 127.0.0.1:8000.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Generate review";
+            }
+        }
+    </script>
+</body>
+</html>

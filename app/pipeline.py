@@ -10,55 +10,19 @@ load_dotenv()
 # --- Pydantic Schema ---
 
 class BugCandidate(BaseModel):
-    title: str = Field(
-        description="Clear, ultra-concise defect title (under 10 words)."
-    )
-    steps_to_reproduce: List[str] = Field(
-        description="Explicit steps from the notes. Keep them very brief. If not provided, use 'Steps not specified'."
-    )
-    severity: Literal["Critical", "High", "Medium", "Low"] = Field(
-        description="Severity: Critical, High, Medium, or Low."
-    )
-    heuristic_tag: Literal[
-        "Structure", 
-        "Function", 
-        "Data", 
-        "Platform", 
-        "Operations", 
-        "Time", 
-        "Boundary/Validation", 
-        "Other"
-    ] = Field(
-        description="The SFDPOT or Boundary testing heuristic."
-    )
-    possible_root_cause: str = Field(
-        description="Brief technical hypothesis starting with 'Hypothesis: ' (max 2 sentences)."
-    )
+    title: str = Field(description="Clear, ultra-concise defect title (under 10 words).")
+    steps_to_reproduce: List[str] = Field(description="Explicit steps from the notes. Keep them very brief. If not provided, use 'Steps not specified'.")
+    severity: Literal["Critical", "High", "Medium", "Low"] = Field(description="Severity: Critical, High, Medium, or Low.")
+    heuristic_tag: Literal["Structure", "Function", "Data", "Platform", "Operations", "Time", "Boundary/Validation", "Other"] = Field(description="The SFDPOT or Boundary testing heuristic.")
+    possible_root_cause: str = Field(description="Brief technical hypothesis starting with 'Hypothesis: ' (max 2 sentences).")
 
 class SummaryOutput(BaseModel):
-    is_testing_notes: bool = Field(
-        description="True if exploratory testing notes. False if unrelated text."
-    )
-    rejection_reason: Optional[str] = Field(
-        default=None,
-        description="Reason for rejection if is_testing_notes is False."
-    )
-    bugs: List[BugCandidate] = Field(
-        default_factory=list,
-        description="List of detected bugs."
-    )
-    coverage_summary: str = Field(
-        default="",
-        description="One highly concise paragraph summarizing coverage."
-    )
-    open_questions: List[str] = Field(
-        default_factory=list,
-        description="Max 3 brief open questions."
-    )
-    suggested_next_focus: List[str] = Field(
-        default_factory=list,
-        description="Max 3 brief focus areas for next testing."
-    )
+    is_testing_notes: bool = Field(description="True if exploratory testing notes. False if unrelated text.")
+    rejection_reason: Optional[str] = Field(default=None, description="Reason for rejection if is_testing_notes is False.")
+    bugs: List[BugCandidate] = Field(default_factory=list, description="List of detected bugs.")
+    coverage_summary: str = Field(default="", description="One highly concise paragraph summarizing coverage.")
+    open_questions: List[str] = Field(default_factory=list, description="Max 3 brief open questions.")
+    suggested_next_focus: List[str] = Field(default_factory=list, description="Max 3 brief focus areas for next testing.")
 
 # --- Core Pipeline Function ---
 
@@ -69,20 +33,14 @@ def analyze_notes(notes: str) -> SummaryOutput:
         return SummaryOutput(
             is_testing_notes=False,
             rejection_reason="Input too short to represent actionable testing notes.",
-            bugs=[],
-            coverage_summary="",
-            open_questions=[],
-            suggested_next_focus=[]
+            bugs=[], coverage_summary="", open_questions=[], suggested_next_focus=[]
         )
 
     if len(stripped_notes) > 15000:
         return SummaryOutput(
             is_testing_notes=False,
             rejection_reason="Input exceeds the max token limit. Please split into smaller chunks.",
-            bugs=[],
-            coverage_summary="",
-            open_questions=[],
-            suggested_next_focus=[]
+            bugs=[], coverage_summary="", open_questions=[], suggested_next_focus=[]
         )
 
     api_key = os.getenv("GROQ_API_KEY")
@@ -116,14 +74,13 @@ def analyze_notes(notes: str) -> SummaryOutput:
             ],
             response_format={"type": "json_object"},
             temperature=0.1,
-            max_tokens=900, # Safely below the 1,000 limit
+            max_tokens=900,
         )
         
         raw_json = response.choices[0].message.content
         return SummaryOutput.model_validate_json(raw_json)
         
     except (ValidationError, json.JSONDecodeError) as e:
-        # Graceful fallback if the API cuts off the JSON halfway through
         return SummaryOutput(
             is_testing_notes=True,
             rejection_reason="Warning: AI output was truncated due to API free-tier token limits.",
@@ -133,8 +90,6 @@ def analyze_notes(notes: str) -> SummaryOutput:
             suggested_next_focus=[]
         )
 
-# --- Verification Entry Point ---
-
 if __name__ == "__main__":
     sample_path = os.path.join("data", "samples", "food_delivery.txt")
     if os.path.exists(sample_path):
@@ -143,7 +98,6 @@ if __name__ == "__main__":
 
         print("=== TEST 1: Valid Session Notes ===")
         res = analyze_notes(test_content)
-        # Print the full structured output as JSON
         print(json.dumps(res.model_dump(), indent=2))
 
     fake_notes = (
