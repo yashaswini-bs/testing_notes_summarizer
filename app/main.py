@@ -27,6 +27,6 @@ async def analyze_endpoint(request: NotesRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
-@app.get("/")
-async def root():
-    return {"message": "Testing Notes API is running! The HTML frontend will connect to this."}
+@app.get("/api/health")
+async def health_check():
+    return {"status": "ok"}
