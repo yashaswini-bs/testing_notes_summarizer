@@ -430,7 +430,6 @@
 
             textEl.innerText = "CHECKING..."; dotEl.style.background = "#f59e0b";
             try {
-                // Ensure this matches your backend URL when deployed
                 const res = await fetch('http://127.0.0.1:8000/api/health');
                 if(res.ok) { textEl.innerText = "CONNECTION HEALTHY"; dotEl.style.background = "#10b981"; globalText.innerText = "API CONNECTED"; globalDot.style.background = "#10b981"; } 
                 else throw new Error();
@@ -453,10 +452,12 @@
             document.getElementById('historyCount').innerText = `${appHistory.length} Review${appHistory.length !== 1 ? 's' : ''} Retained`;
             container.innerHTML = '';
             if(appHistory.length === 0) { container.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem;">No history found in this session.</div>'; return; }
-            appHistory.forEach(item => {
+            
+            // Refactored: Added onclick handler and hover styles to load history items
+            appHistory.forEach((item, index) => {
                 const bugCount = item.data.bugs ? item.data.bugs.length : 0;
                 container.innerHTML += `
-                    <div class="history-item">
+                    <div class="history-item" onclick="loadHistoryItem(${index})" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.05)'" onmouseout="this.style.transform='none'; this.style.boxShadow='none'">
                         <div class="history-date">🕒 ${item.date}</div>
                         <div class="history-title">${bugCount} defect candidates extracted.</div>
                         <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted);">
@@ -467,10 +468,22 @@
             });
         }
 
+        // Refactored: New function to handle clicking a history card
+        function loadHistoryItem(index) {
+            const item = appHistory[index];
+            if(!item) return;
+            
+            // Switch UI back to workbench
+            switchView('workbench', document.querySelector('.nav-item:nth-child(2)'));
+            
+            // Render the saved data
+            renderReportUI(item.data);
+            document.getElementById('workbenchLayout').classList.add('split');
+        }
+
         function exportReport(format) {
             if (!currentReportData) return alert("No data available to export.");
             
-            // Generate PDF visually from the DOM
             if (format === 'pdf') {
                 const element = document.getElementById('reportToExport');
                 const opt = {
@@ -484,7 +497,6 @@
                 return;
             }
 
-            // Generate other formats programmatically
             const data = currentReportData;
             let content = '';
             let mimeType = '';
@@ -534,6 +546,45 @@
             URL.revokeObjectURL(url);
         }
 
+        // Refactored: Centralized UI rendering logic
+        function renderReportUI(data) {
+            currentReportData = data;
+
+            document.getElementById('resTitle').innerText = `${data.bugs.length} defect candidates extracted from the notes.`;
+            document.getElementById('resCountRight').innerText = `${data.bugs.length} ranked by risk`;
+            document.getElementById('mCands').innerText = data.bugs.length;
+            document.getElementById('mQs').innerText = data.open_questions.length;
+            document.getElementById('mFocus').innerText = data.suggested_next_focus.length;
+
+            document.getElementById('uiCoverageSummary').innerText = data.coverage_summary;
+
+            const list = document.getElementById('defectsList');
+            list.innerHTML = '';
+            if(isCompact) list.classList.add('compact-mode');
+            data.bugs.forEach(bug => {
+                const sev = bug.severity.toLowerCase();
+                list.innerHTML += `
+                    <div class="defect-card">
+                        <div class="defect-top"><span class="badge ${sev}">${bug.severity}</span><div class="defect-title">${bug.title}</div></div>
+                        <div class="defect-split">
+                            <div><div class="split-lbl">Evidence</div><div class="split-val">${bug.steps_to_reproduce.join(' → ')}</div></div>
+                            <div><div class="split-lbl">Likely Root Cause</div><div class="split-val">${bug.possible_root_cause}</div></div>
+                        </div>
+                        <div class="defect-footer">heuristic / ${bug.heuristic_tag}</div>
+                    </div>`;
+            });
+
+            const qList = document.getElementById('uiOpenQuestions');
+            qList.innerHTML = '';
+            if(data.open_questions.length === 0) qList.innerHTML = '<li>None identified</li>';
+            data.open_questions.forEach(q => qList.innerHTML += `<li>${q}</li>`);
+
+            const fList = document.getElementById('uiNextFocus');
+            fList.innerHTML = '';
+            if(data.suggested_next_focus.length === 0) fList.innerHTML = '<li>None identified</li>';
+            data.suggested_next_focus.forEach(f => fList.innerHTML += `<li>${f}</li>`);
+        }
+
         async function analyzeNotes() {
             const text = document.getElementById('notesInput').value;
             const btn = document.getElementById('analyzeBtn');
@@ -543,7 +594,6 @@
             btn.disabled = true; btn.innerText = "Analyzing...";
 
             try {
-                // Ensure this matches your backend URL when deployed
                 const response = await fetch('http://127.0.0.1:8000/api/analyze', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notes: text })
                 });
@@ -556,46 +606,7 @@
                     btn.disabled = false; btn.innerText = "Generate review"; return;
                 }
 
-                currentReportData = data;
-
-                // Hero Metrics
-                document.getElementById('resTitle').innerText = `${data.bugs.length} defect candidates extracted from the notes.`;
-                document.getElementById('resCountRight').innerText = `${data.bugs.length} ranked by risk`;
-                document.getElementById('mCands').innerText = data.bugs.length;
-                document.getElementById('mQs').innerText = data.open_questions.length;
-                document.getElementById('mFocus').innerText = data.suggested_next_focus.length;
-
-                // 1. Coverage
-                document.getElementById('uiCoverageSummary').innerText = data.coverage_summary;
-
-                // 2. Defects
-                const list = document.getElementById('defectsList');
-                list.innerHTML = '';
-                if(isCompact) list.classList.add('compact-mode');
-                data.bugs.forEach(bug => {
-                    const sev = bug.severity.toLowerCase();
-                    list.innerHTML += `
-                        <div class="defect-card">
-                            <div class="defect-top"><span class="badge ${sev}">${bug.severity}</span><div class="defect-title">${bug.title}</div></div>
-                            <div class="defect-split">
-                                <div><div class="split-lbl">Evidence</div><div class="split-val">${bug.steps_to_reproduce.join(' → ')}</div></div>
-                                <div><div class="split-lbl">Likely Root Cause</div><div class="split-val">${bug.possible_root_cause}</div></div>
-                            </div>
-                            <div class="defect-footer">heuristic / ${bug.heuristic_tag}</div>
-                        </div>`;
-                });
-
-                // 3. Ambiguities & Coverage Gaps
-                const qList = document.getElementById('uiOpenQuestions');
-                qList.innerHTML = '';
-                if(data.open_questions.length === 0) qList.innerHTML = '<li>None identified</li>';
-                data.open_questions.forEach(q => qList.innerHTML += `<li>${q}</li>`);
-
-                const fList = document.getElementById('uiNextFocus');
-                fList.innerHTML = '';
-                if(data.suggested_next_focus.length === 0) fList.innerHTML = '<li>None identified</li>';
-                data.suggested_next_focus.forEach(f => fList.innerHTML += `<li>${f}</li>`);
-
+                renderReportUI(data); // Call the centralized UI renderer
                 saveToHistory(data);
                 layout.classList.add('split');
 
