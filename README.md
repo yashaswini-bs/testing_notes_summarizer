@@ -32,6 +32,7 @@ Exploratory software testing yields high-value insights, but documenting these s
 **Given** I need to log the defects into our tracking system,
 **When** I click export,
 **Then** the system should instantly generate a formatted Markdown, PDF, or JSON file for seamless Jira/GitHub integration.
+<<<<<<< HEAD
 
 ## Task Planning & Execution
 The project execution was managed via a Kanban methodology, ensuring strict progression through Understanding, Design, Build, and Testing phases.
@@ -40,3 +41,5 @@ The project execution was managed via a Kanban methodology, ensuring strict prog
 
 ![Task Planning Board](./docs/kanban_board.png)
 <!-- Ensure you create a quick Kanban board on GitHub Projects or Trello, screenshot it, and save it in a docs folder! -->
+=======
+>>>>>>> 5db7836f623b92b415bd7d83dc88bdc5d7f374bd

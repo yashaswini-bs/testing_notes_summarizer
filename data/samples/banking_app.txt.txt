@@ -1,0 +1,18 @@
+Exploratory Test: Fund Transfers
+Environment: iOS TestFlight build 992
+Tester: QA-01
+
+- Logged in using FaceID. Fast and smooth.
+- Navigated to "Transfer Funds" tab.
+- Selected "Internal Transfer" from Checking to Savings.
+- Entered amount $5000.00.
+- Clicked submit. The confirmation modal text overlaps the "Confirm" button on iPhone 12 Mini screen size.
+- Managed to click confirm anyway. Transfer successful. Balance calculation is correct.
+- Now trying "External Transfer".
+- Added a new payee.
+- Entered an invalid routing number (999999999).
+- Error message said "System error 502: NULL_POINTER" instead of a friendly "Invalid routing number".
+- Corrected routing number.
+- Tried to transfer $0.00. System blocked it (expected).
+- Tried to transfer $-10.00. System accepted the input but the app froze completely upon hitting submit.
+- Had to force close the app to recover.

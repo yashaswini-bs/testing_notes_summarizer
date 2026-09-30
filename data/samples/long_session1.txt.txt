@@ -1,0 +1,51 @@
+Comprehensive Session: User Onboarding and Initial Setup
+Platform: Web (Firefox, Mac)
+Time: 45 minutes
+
+Part 1: Registration
+- Landed on homepage. Clicked "Sign Up Free".
+- The email validation is too strict. It rejected "test+alias@gmail.com". We use plus addressing all the time, this needs fixing.
+- Used a standard email instead. 
+- Password meter is helpful. It correctly identifies weak passwords.
+- Submitted form. Received verification email within 5 seconds.
+- Clicked verification link. Taken to a "Welcome" interstitial page.
+- There is a typo on this page: "Congradulations" instead of "Congratulations".
+- Clicked "Continue to Dashboard".
+
+Part 2: Dashboard Onboarding Walkthrough
+- Tooltip 1 points to the navigation bar. Looks fine.
+- Tooltip 2 points to the settings gear.
+- Tooltip 3 is supposed to point to the "Create New" button, but it's pointing to empty space on the far right of the screen. The CSS anchor is detached.
+- Skipped the rest of the tour.
+- Created my first project.
+- Named it "Alpha Project".
+- The project creation modal didn't close automatically after success. I had to manually click the X.
+- Refreshing the page shows the project in the list.
+
+Part 3: Inviting Team Members
+- Went to Project Settings -> Team.
+- Typed in "colleague@example.com".
+- Assigned "Viewer" role.
+- Sent invite.
+- The UI showed a green success toast, but when I checked the network tab, the POST request actually returned a 500 Internal Server Error.
+- Reloaded the page. The invited user is NOT in the list.
+- This is a critical silent failure. The user thinks the invite went out but it didn't.
+- Tried again with an Admin role. Same 500 error, same fake success toast.
+- The payload sent looks like: {"email": "colleague@example.com", "role_id": 2}. Maybe role_id is wrong?
+
+Part 4: Dark Mode Toggle
+- Switched to Dark Mode using the footer toggle.
+- Background turns dark grey. Text turns white.
+- The "Save Changes" button on the profile page remains dark blue with black text, making it completely unreadable in Dark Mode.
+- Most dropdown menus still have white backgrounds with white text (invisible). 
+- Dark mode seems highly incomplete.
+
+Part 5: Logout and Session Expiry
+- Left the tab open and inactive for 35 minutes to test timeout.
+- Came back, clicked a link.
+- Redirected to login page with message "Session expired". Good.
+- Logged back in.
+- I was not redirected back to the page I was trying to access, just dumped on the dashboard.
+- Logged out manually. Logout is instant.
+- Clicked the back button on the browser. I can see the cached dashboard, but clicking anything kicks me to login.
+- End of session.

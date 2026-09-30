@@ -1,51 +1,46 @@
-Comprehensive Session: User Onboarding and Initial Setup
-Platform: Web (Firefox, Mac)
-Time: 45 minutes
-
-Part 1: Registration
-- Landed on homepage. Clicked "Sign Up Free".
-- The email validation is too strict. It rejected "test+alias@gmail.com". We use plus addressing all the time, this needs fixing.
-- Used a standard email instead. 
-- Password meter is helpful. It correctly identifies weak passwords.
-- Submitted form. Received verification email within 5 seconds.
-- Clicked verification link. Taken to a "Welcome" interstitial page.
-- There is a typo on this page: "Congradulations" instead of "Congratulations".
-- Clicked "Continue to Dashboard".
-
-Part 2: Dashboard Onboarding Walkthrough
-- Tooltip 1 points to the navigation bar. Looks fine.
-- Tooltip 2 points to the settings gear.
-- Tooltip 3 is supposed to point to the "Create New" button, but it's pointing to empty space on the far right of the screen. The CSS anchor is detached.
-- Skipped the rest of the tour.
-- Created my first project.
-- Named it "Alpha Project".
-- The project creation modal didn't close automatically after success. I had to manually click the X.
-- Refreshing the page shows the project in the list.
-
-Part 3: Inviting Team Members
-- Went to Project Settings -> Team.
-- Typed in "colleague@example.com".
-- Assigned "Viewer" role.
-- Sent invite.
-- The UI showed a green success toast, but when I checked the network tab, the POST request actually returned a 500 Internal Server Error.
-- Reloaded the page. The invited user is NOT in the list.
-- This is a critical silent failure. The user thinks the invite went out but it didn't.
-- Tried again with an Admin role. Same 500 error, same fake success toast.
-- The payload sent looks like: {"email": "colleague@example.com", "role_id": 2}. Maybe role_id is wrong?
-
-Part 4: Dark Mode Toggle
-- Switched to Dark Mode using the footer toggle.
-- Background turns dark grey. Text turns white.
-- The "Save Changes" button on the profile page remains dark blue with black text, making it completely unreadable in Dark Mode.
-- Most dropdown menus still have white backgrounds with white text (invisible). 
-- Dark mode seems highly incomplete.
-
-Part 5: Logout and Session Expiry
-- Left the tab open and inactive for 35 minutes to test timeout.
-- Came back, clicked a link.
-- Redirected to login page with message "Session expired". Good.
-- Logged back in.
-- I was not redirected back to the page I was trying to access, just dumped on the dashboard.
-- Logged out manually. Logout is instant.
-- Clicked the back button on the browser. I can see the cached dashboard, but clicking anything kicks me to login.
-- End of session.
+Session: TravelEase booking app, full regression-style exploratory pass, ~90 min, staging build 2.4.0, Chrome desktop + Android app
+- Opened app, logged in with test account, dashboard loaded within 2 sec
+- Searched flights Bengaluru to Delhi, next Saturday, 1 adult
+- Results loaded correctly, sorted by price ascending by default
+- Applied filter "non-stop only" - list updated correctly, count matched filter
+- Applied filter "morning departure" alongside non-stop - combination worked, no bugs
+- Selected a flight, redirected to passenger details page
+- Left middle name field empty - accepted, no validation error, seems intentional
+- Entered passport number with lowercase letters - accepted without normalizing to uppercase
+- Selected seat map - window seat showed as available, but on selecting it, said "seat unavailable" - possible stale cache issue
+- Retried seat selection after refresh - window seat now correctly showed as booked by someone else
+- Proceeded to add-on screen, selected extra baggage 15kg
+- Price summary updated correctly to reflect baggage add-on
+- Removed baggage add-on - price reverted correctly
+- Proceeded to payment, selected credit card option
+- Entered card number, expiry in the past (e.g. 01/20) - app accepted it without validation
+- Corrected expiry to a valid future date, proceeded
+- Payment page showed a 15 second processing spinner with no progress indicator or estimated time
+- Payment succeeded, confirmation screen showed booking reference
+- Did not receive confirmation email within 5 minutes of booking (checked spam too)
+- Switched to Android app, logged in with same account
+- Booking from web session appeared correctly under "My Trips"
+- Tried to cancel the booking from mobile app
+- Cancellation policy text was cut off on smaller screen, "Read more" link did nothing when tapped
+- Proceeded with cancellation anyway
+- Refund amount shown was different from what cancellation policy implied (policy said 80% refund, amount shown was ~65%)
+- Did not complete actual cancellation to avoid losing the test booking for further testing
+- Went back to search, tried round-trip search this time
+- Return date picker allowed selecting a date before the departure date - no validation
+- Corrected dates, search proceeded normally
+- Tried searching with 0 passengers - search button remained enabled, no validation message
+- Tried entering a source and destination city that are the same - error message shown correctly, this validation works
+- Tested app in landscape mode - some buttons overlapped with the header layout
+- Rotated back to portrait - layout recovered correctly, no lasting issue
+- Tested with airplane mode toggled during search - app showed "no internet connection" message appropriately
+- Turned airplane mode off - app retried automatically after a few seconds and search proceeded, good behavior here
+- Left app in background for 20 min, returned - session was still active, no forced re-login
+- Left app in background overnight (simulated by clearing cache) - correctly prompted for re-login on next open
+- Tried using back button repeatedly during checkout flow - eventually landed on a blank white screen, had to force close
+- Reopened app after force close - previous incomplete booking was gone, no draft/recovery state offered
+- Did not test group booking flow (more than 4 passengers) in this session
+- Did not test wallet/UPI payment methods, only credit card was tried
+- Did not test the customer support chat widget
+- Noticed the app icon badge count didn't update after the booking confirmation, stayed at 0
+- Overall app felt stable for the main search-to-payment flow, but had several validation gaps around dates, card expiry, and passport formatting
+- Session ended due to time, did not get to test multi-city itineraries or the loyalty points redemption flow

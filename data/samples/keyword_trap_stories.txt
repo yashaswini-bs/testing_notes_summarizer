@@ -1,0 +1,45 @@
+## Story 1 — Biology lab (insect "bug")
+Yesterday we walked into the biology lab to study an insect bug sample.
+The supervisor observed structural defects on the wing under the
+microscope, likely from mishandling during collection. We took five
+photos and logged the specimen number before proceeding to lunch.
+
+## Story 2 — Automobile crash test (literal, non-software)
+The new sedan underwent its scheduled crash test at the safety
+facility today. Engineers reported that the front airbag deployed
+correctly, but a minor structural failure was noted in the rear bumper
+mount. The test will be repeated next week with an updated bumper
+design before the model receives its final safety rating.
+
+## Story 3 — Medical test results
+Went in for a routine blood test this morning. The nurse said the sample
+processing failed the first time due to a labeling error, so they had to
+redraw it. Results are expected in two days. The doctor mentioned that if
+anything looks abnormal, they'll schedule a follow-up test.
+
+## Story 4 — Baking competition
+Tried a new soufflé recipe for the weekend baking competition. The first
+attempt completely crashed in the oven — collapsed within a minute of
+being pulled out. Second attempt failed too, probably from opening the
+oven door too early. Found a tiny bug on the kitchen windowsill while
+cleaning up, which was unrelated but startling.
+
+## Story 5 — School exam
+Had my chemistry test today, the hardest one this semester. Definitely
+think I failed the organic chemistry section, ran out of time on the
+reaction mechanism questions. My friend said the same thing happened to
+her — she thinks there was a printing defect on her question paper where
+one part was smudged and unreadable.
+
+## Story 6 — Car test drive
+Went for a test drive of a used hatchback this afternoon. The engine
+sounded fine, but I noticed the AC took a while to cool down, and there
+was a slight rattling noise from the dashboard on rough roads. Didn't
+notice any major issues otherwise, but I'd want a mechanic to inspect it
+before deciding.
+
+## Story 7 — Fitness/gym context
+Did a strength test at the gym today to check my one-rep max on squats.
+Failed my third attempt at the higher weight, form broke down on the way
+up. Trainer said my hip mobility might be the underlying issue and
+suggested a mobility test next session to check range of motion.
